@@ -27,7 +27,7 @@ function offsetMeters(origin, bearingDeg, meters) {
     return [origin[0] + dLng, origin[1] + dLat];
 }
 
-// Tam olarak Tuzcular Sokağı'nın üzerine (sola hizalanarak) konumlandırıldı
+// Tam olarak Tuzcular Sokağı'nın üzerine konumlandırıldı
 const START_U = offsetMeters(MAP_CENTER, 148 + SCENE_ROTATION_DEG, 16.5);
 let userPos = [...START_U];
 
@@ -169,27 +169,6 @@ function injectInteractiveUI() {
             color: #2b6cb0;
         }
 
-        /* Instruction Overlay */
-        #nav-instruction {
-            position: absolute;
-            top: 84px; 
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: #333333;
-            text-align: center;
-            z-index: 1000;
-            pointer-events: none;
-            backdrop-filter: blur(4px);
-            white-space: nowrap;
-        }
-
         /* D-Pad Controls Container (Google Maps Style: White Frame with Soft Shadows & Brand-Green Background inside) */
         #d-pad {
             position: absolute;
@@ -253,12 +232,6 @@ function injectInteractiveUI() {
         </div>
     `;
     document.body.appendChild(modernHeader);
-
-    // Inject Navigation Instructions
-    const instruction = document.createElement('div');
-    instruction.id = 'nav-instruction';
-    instruction.textContent = 'Haritada istediğiniz şekilde hareket edebilmek için ok işaretlerini kullanın.';
-    document.body.appendChild(instruction);
 
     // Inject Directional Pad
     const dpad = document.createElement('div');
@@ -395,22 +368,25 @@ function bootstrap() {
     const flowScreen = document.getElementById("experiment-flow-screen");
     const stepConnecting = document.getElementById("step-connecting");
 
-    function startExperimentFlow() {
-        setTimeout(() => {
-            if (stepConnecting) stepConnecting.classList.add("hidden");
-            
-            if (flowScreen) {
-                flowScreen.style.opacity = "0";
-                flowScreen.style.transform = "scale(0.95)";
-            }
-            
+    let flowDismissed = false;
+    function dismissFlow() {
+        if (flowDismissed) return;
+        flowDismissed = true;
+
+        if (stepConnecting) stepConnecting.classList.add("hidden");
+        if (flowScreen) {
+            flowScreen.style.opacity = "0";
+            flowScreen.style.transform = "scale(0.95)";
             setTimeout(() => {
-                if (flowScreen) flowScreen.style.display = "none";
-                initMarkers();
-                startInteractivePhase();
+                flowScreen.style.display = "none";
             }, 500);
-        }, 3000);
+        }
+        initMarkers();
+        startInteractivePhase();
     }
+
+    // "Bağlanıyor..." ekranı açıldıktan sonra tam olarak 3 saniye (3000 ms) ekranda kalır
+    setTimeout(dismissFlow, 3000);
 
     function startInteractivePhase() {
         animationStarted = true;
@@ -420,8 +396,6 @@ function bootstrap() {
             sendCompletionSignal("normal");
         }, EXPERIMENT_DURATION_MS);
     }
-
-    startExperimentFlow();
 
     /* ------------------------------------------------------------------
      * BASEMAP LOGIC
