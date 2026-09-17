@@ -57,8 +57,6 @@ function createMarkerElement(person) {
         mapsDotContainer.appendChild(solidCore);
         agentEl.appendChild(mapsDotContainer);
         
-        // Label removed for Participant Training Phase
-        
         agentEl.setAttribute("role", "img");
         agentEl.setAttribute("aria-label", "Kullanıcı konumu");
     }
@@ -86,45 +84,94 @@ function injectInteractiveUI() {
     const style = document.createElement('style');
     style.innerHTML = `
         :root {
-            /* Brand green color from the starting screen */
             --brand-green: rgba(220, 242, 224, 0.95); 
         }
 
-        /* Modern App Header Styles */
+        /* Google Maps Style Blue Pulse Dot Animation & Layout */
+        .google-maps-dot-container {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .google-maps-pulse {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: rgba(66, 133, 244, 0.4);
+            border-radius: 50%;
+            animation: google-pulse 2s infinite ease-out;
+        }
+
+        .google-maps-core {
+            position: relative;
+            width: 14px;
+            height: 14px;
+            background: #4285F4;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        @keyframes google-pulse {
+            0% {
+                transform: scale(0.6);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2.2);
+                opacity: 0;
+            }
+        }
+
+        /* Modern White App Header with Soft Shaded Constraints */
         #modern-app-header {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 60px;
-            background: var(--brand-green);
+            height: 64px;
+            background: #ffffff;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
         }
         .header-logo {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
-            letter-spacing: -0.5px;
+            letter-spacing: -0.4px;
             color: #1a1a1a;
         }
-        .header-logo svg {
+        .logo-icon-wrapper {
+            width: 34px;
+            height: 34px;
+            background: #f0f4f8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+        }
+        .logo-icon-wrapper svg {
             color: #2b6cb0;
         }
 
         /* Instruction Overlay */
         #nav-instruction {
             position: absolute;
-            top: 80px; 
+            top: 84px; 
             left: 50%;
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.95);
@@ -142,49 +189,46 @@ function injectInteractiveUI() {
             white-space: nowrap;
         }
 
-        /* D-Pad Controls Container (Floating Frame) */
+        /* D-Pad Controls Container (Google Maps Style: White Frame with Soft Shadows & Brand-Green Background inside) */
         #d-pad {
             position: absolute;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            
-            /* Styled as a floating panel to frame the buttons */
-            background: var(--brand-green);
-            padding: 20px;
+            background: #ffffff;
+            padding: 16px;
             border-radius: 28px;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.04);
             display: grid;
-            grid-template-columns: 60px 60px 60px;
-            grid-template-rows: 60px 60px;
+            grid-template-columns: 56px 56px 56px;
+            grid-template-rows: 56px 56px;
             gap: 8px;
             z-index: 2000;
         }
         .d-btn {
-            background: #ffffff;
-            border: 1px solid rgba(0,0,0,0.05);
+            background: var(--brand-green);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 50%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            font-size: 24px;
-            color: #475569;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            font-size: 22px;
+            color: #2d3748;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
             touch-action: manipulation;
-            transition: all 0.1s ease;
+            transition: all 0.15s ease;
             -webkit-tap-highlight-color: transparent;
         }
         .d-btn:active, .d-btn.active {
-            background: #f1f5f9;
+            background: #c8e6cb;
             transform: scale(0.92);
-            color: #0f172a;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            color: #1a202c;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
         }
         #btn-up { grid-column: 2; grid-row: 1; }
         #btn-left { grid-column: 1; grid-row: 2; }
@@ -193,15 +237,17 @@ function injectInteractiveUI() {
     `;
     document.head.appendChild(style);
 
-    // Inject Modern App Header
+    // Inject Modern White App Header with Circular Logo Icon
     const modernHeader = document.createElement('div');
     modernHeader.id = 'modern-app-header';
     modernHeader.innerHTML = `
         <div class="header-logo">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-            </svg>
+            <div class="logo-icon-wrapper">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+            </div>
             NeredeApp
         </div>
     `;
@@ -213,7 +259,7 @@ function injectInteractiveUI() {
     instruction.textContent = 'Haritada istediğiniz şekilde hareket edebilmek için ok işaretlerini kullanın.';
     document.body.appendChild(instruction);
 
-    // Inject Directional Pad (Now acts as the green frame itself)
+    // Inject Directional Pad
     const dpad = document.createElement('div');
     dpad.id = 'd-pad';
     dpad.innerHTML = `
@@ -248,6 +294,7 @@ function setupMovementControls() {
             markerInstances["mainNode"].setLngLat(userPos);
         }
         if (map) {
+            // İlk hareket esnasındaki zıplama sorununu çözmek için anlık konum panTo işlemi duration sıfırlanarak başlatılır
             map.panTo(userPos, { duration: TICK_RATE_MS, animate: true, easing: (t) => t });
         }
     };
