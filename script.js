@@ -353,7 +353,7 @@ let qualtricsAckReceived = false;
 let hasSentCompletion = false;
 let handshakeIntervalId = null;
 
-const EXPERIMENT_DURATION_MS = 60000; 
+const EXPERIMENT_DURATION_MS = 20000; 
 
 function buildPayload(reason) {
     return {
