@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>location-sharing app</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location-Sharing App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
@@ -12,42 +12,16 @@
 </head>
 <body>
 
-<!-- Light Green Full Screen Experiment Flow Layer -->
+<!-- Açılış Yükleme Ekranı -->
 <div id="experiment-flow-screen">
-    <!-- Step 1: Connecting -->
+    <!-- Adım 1: Bağlanıyor -->
     <div id="step-connecting" class="flow-step">
         <div class="spinner"></div>
         <p class="flow-text">Bağlanıyor...</p>
     </div>
-
-    <!-- Step 2: Waiting -->
-    <div id="step-waiting" class="flow-step hidden">
-        <div class="spinner"></div>
-        <p class="flow-text">Diğer katılımcılar bekleniyor...</p>
-    </div>
-
-    <!-- Step 3: Everyone Joined -->
-    <div id="step-joined" class="flow-step hidden">
-        <div class="success-checkmark">✔</div>
-        <p class="flow-text">Tüm katılımcılar katıldı.</p>
-        <p class="flow-text paragraph-indent">Diğer katılımcılar ile birlikte konum paylaşımı uygulamasına yönlendiriliyorsunuz.</p>
-    </div>
-
-    <!-- Step 4: Nickname Input -->
-    <div id="step-nickname" class="flow-step hidden">
-        <div class="login-container">
-            <p class="instruction">Lütfen az sonra bağlanacağınız konum paylaşımı uygulaması için bir takma ad girin.</p>
-            <input type="text" id="nickname-input" maxlength="10" placeholder="Takma ad gir..." autocomplete="off">
-            <p class="input-note">Takma adınızın tamamını sadece siz göreceksiniz. Diğer katılımcılar takma adınızın yalnızca baş harfini görecek.</p>
-            <button id="submit-btn" aria-label="Next page">➔</button>
-        </div>
-    </div>
 </div>
 
-<div id="header">
-    NeredeApp
-</div>
-
+<!-- Harita Konteyneri (Başlık ve arayüz JS tarafından dinamik olarak eklenecektir) -->
 <div id="container">
     <div id="map"></div>
 </div>
