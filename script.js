@@ -27,7 +27,8 @@ function offsetMeters(origin, bearingDeg, meters) {
     return [origin[0] + dLng, origin[1] + dLat];
 }
 
-const START_U = offsetMeters(MAP_CENTER, 162 + SCENE_ROTATION_DEG, 48.0);
+// Tam olarak Tuzcular Sokağı'nın üzerine (sola hizalanarak) konumlandırıldı
+const START_U = offsetMeters(MAP_CENTER, 148 + SCENE_ROTATION_DEG, 16.5);
 let userPos = [...START_U];
 
 const positions = { mainNode: START_U };
@@ -274,7 +275,7 @@ function injectInteractiveUI() {
 }
 
 function setupMovementControls() {
-    const TICK_RATE_MS = 50; 
+    const TICK_RATE_MS = 30; 
     const METERS_PER_TICK = (WALK_SPEED_MPS / 1000) * TICK_RATE_MS;
 
     const directions = {
@@ -294,8 +295,7 @@ function setupMovementControls() {
             markerInstances["mainNode"].setLngLat(userPos);
         }
         if (map) {
-            // İlk hareket esnasındaki zıplama sorununu çözmek için anlık konum panTo işlemi duration sıfırlanarak başlatılır
-            map.panTo(userPos, { duration: TICK_RATE_MS, animate: true, easing: (t) => t });
+            map.easeTo({ center: userPos, duration: TICK_RATE_MS, easing: (t) => t });
         }
     };
 
@@ -476,7 +476,7 @@ function bootstrap() {
             map = new maplibregl.Map({
                 container: "map",
                 style: "https://tiles.openfreemap.org/styles/liberty",
-                center: MAP_CENTER,
+                center: START_U,
                 zoom: MAP_ZOOM,
                 bearing: SCENE_ROTATION_DEG, 
                 minZoom: MAP_ZOOM,
