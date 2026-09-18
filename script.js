@@ -15,7 +15,7 @@ const MAP_ZOOM = 18.0;
 // Rotation angle for map and movement vectors (to align with roads)
 const SCENE_ROTATION_DEG = 55;
 
-const WALK_SPEED_MPS = 1.5; 
+const WALK_SPEED_MPS = 2.1; 
 const EARTH_RADIUS_M = 6378137;
 
 function offsetMeters(origin, bearingDeg, meters) {
