@@ -228,7 +228,7 @@ function injectInteractiveUI() {
                     <circle cx="12" cy="10" r="3"></circle>
                 </svg>
             </div>
-            NeredeApp
+            DoveSeiApp
         </div>
     `;
     document.body.appendChild(modernHeader);
