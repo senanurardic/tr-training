@@ -169,14 +169,14 @@ function injectInteractiveUI() {
             color: #2b6cb0;
         }
 
-        /* Compact Touchpad Controller Container */
+        /* Minimal Omnidirectional Touchpad Controller Container */
         #d-pad {
             position: absolute;
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            width: 96px;
-            height: 96px;
+            width: 104px;
+            height: 104px;
             background: var(--brand-green);
             border-radius: 50%;
             backdrop-filter: blur(12px);
@@ -194,6 +194,28 @@ function injectInteractiveUI() {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             background: #c8e6cb;
         }
+
+        /* Minimal Directional Indicators (Arrows & Diagonal Dots) */
+        .pad-indicator {
+            position: absolute;
+            color: rgba(45, 55, 72, 0.65);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s ease;
+        }
+        #d-pad:active .pad-indicator, #d-pad.active .pad-indicator {
+            color: rgba(26, 32, 44, 0.9);
+        }
+        .ind-n  { top: 5px; left: 50%; transform: translateX(-50%); font-size: 12px; }
+        .ind-ne { top: 16px; right: 16px; font-size: 8px; }
+        .ind-e  { right: 6px; top: 50%; transform: translateY(-50%); font-size: 12px; }
+        .ind-se { bottom: 16px; right: 16px; font-size: 8px; }
+        .ind-s  { bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 12px; }
+        .ind-sw { bottom: 16px; left: 16px; font-size: 8px; }
+        .ind-w  { left: 6px; top: 50%; transform: translateY(-50%); font-size: 12px; }
+        .ind-nw { top: 16px; left: 16px; font-size: 8px; }
     `;
     document.head.appendChild(style);
 
@@ -213,10 +235,20 @@ function injectInteractiveUI() {
     `;
     document.body.appendChild(modernHeader);
 
-    // Inject Compact Touchpad Controller (No Arrows)
+    // Inject Omnidirectional Touchpad Controller with Minimal Direction Indicators
     const dpad = document.createElement('div');
     dpad.id = 'd-pad';
     dpad.setAttribute('aria-label', "Area di controllo del movimento");
+    dpad.innerHTML = `
+        <span class="pad-indicator ind-n">&#9650;</span>
+        <span class="pad-indicator ind-ne">&bull;</span>
+        <span class="pad-indicator ind-e">&#9654;</span>
+        <span class="pad-indicator ind-se">&bull;</span>
+        <span class="pad-indicator ind-s">&#9660;</span>
+        <span class="pad-indicator ind-sw">&bull;</span>
+        <span class="pad-indicator ind-w">&#9664;</span>
+        <span class="pad-indicator ind-nw">&bull;</span>
+    `;
     document.body.appendChild(dpad);
 
     setupMovementControls();
@@ -276,9 +308,8 @@ function setupMovementControls() {
         const centerY = rect.top + rect.height / 2;
 
         const dx = clientX - centerX;
-        const dy = clientY - centerY; // Screen coordinates: down is positive Y
+        const dy = clientY - centerY; 
 
-        // Calculate angle in degrees relative to upward (0 degrees)
         let angleDeg = Math.atan2(dx, -dy) * (180 / Math.PI);
         if (angleDeg < 0) angleDeg += 360;
 
