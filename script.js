@@ -15,7 +15,7 @@ const MAP_ZOOM = 18.0;
 // Rotation angle for map and movement vectors (to align with roads)
 const SCENE_ROTATION_DEG = 55;
 
-const WALK_SPEED_MPS = 2.1; 
+const WALK_SPEED_MPS = 1.2; 
 const EARTH_RADIUS_M = 6378137;
 
 function offsetMeters(origin, bearingDeg, meters) {
@@ -27,7 +27,7 @@ function offsetMeters(origin, bearingDeg, meters) {
     return [origin[0] + dLng, origin[1] + dLat];
 }
 
-// Tam olarak Tuzcular Sokağı'nın üzerine konumlandırıldı
+// Positioned precisely on Tuzcular Street
 const START_U = offsetMeters(MAP_CENTER, 148 + SCENE_ROTATION_DEG, 16.5);
 let userPos = [...START_U];
 
@@ -59,7 +59,7 @@ function createMarkerElement(person) {
         agentEl.appendChild(mapsDotContainer);
         
         agentEl.setAttribute("role", "img");
-        agentEl.setAttribute("aria-label", "Kullanıcı konumu");
+        agentEl.setAttribute("aria-label", "Posizione dell'utente");
     }
     clusterEl.appendChild(agentEl);
     return clusterEl;
@@ -169,31 +169,29 @@ function injectInteractiveUI() {
             color: #2b6cb0;
         }
 
-        /* D-Pad Controls Container (Google Maps Style: White Frame with Soft Shadows & Brand-Green Background inside) */
+        /* Compact Circular D-Pad Controls Container */
         #d-pad {
             position: absolute;
-            bottom: 30px;
+            bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            background: #ffffff;
-            padding: 16px;
-            border-radius: 28px;
+            width: 110px;
+            height: 110px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 50%;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(0, 0, 0, 0.04);
-            display: grid;
-            grid-template-columns: 56px 56px 56px;
-            grid-template-rows: 56px 56px;
-            gap: 8px;
             z-index: 2000;
         }
         .d-btn {
+            position: absolute;
             background: var(--brand-green);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.8);
             border-radius: 50%;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-            font-size: 22px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            font-size: 14px;
             color: #2d3748;
             cursor: pointer;
             display: flex;
@@ -203,17 +201,26 @@ function injectInteractiveUI() {
             touch-action: manipulation;
             transition: all 0.15s ease;
             -webkit-tap-highlight-color: transparent;
+            width: 36px;
+            height: 36px;
         }
         .d-btn:active, .d-btn.active {
             background: #c8e6cb;
             transform: scale(0.92);
             color: #1a202c;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        #btn-up { grid-column: 2; grid-row: 1; }
-        #btn-left { grid-column: 1; grid-row: 2; }
-        #btn-down { grid-column: 2; grid-row: 2; }
-        #btn-right { grid-column: 3; grid-row: 2; }
+        #btn-up { top: 6px; left: 50%; transform: translateX(-50%); }
+        #btn-up:active, #btn-up.active { transform: translateX(-50%) scale(0.92); }
+
+        #btn-left { left: 6px; top: 50%; transform: translateY(-50%); }
+        #btn-left:active, #btn-left.active { transform: translateY(-50%) scale(0.92); }
+
+        #btn-down { bottom: 6px; left: 50%; transform: translateX(-50%); }
+        #btn-down:active, #btn-down.active { transform: translateX(-50%) scale(0.92); }
+
+        #btn-right { right: 6px; top: 50%; transform: translateY(-50%); }
+        #btn-right:active, #btn-right.active { transform: translateY(-50%) scale(0.92); }
     `;
     document.head.appendChild(style);
 
@@ -233,14 +240,14 @@ function injectInteractiveUI() {
     `;
     document.body.appendChild(modernHeader);
 
-    // Inject Directional Pad
+    // Inject Compact Circular Directional Pad
     const dpad = document.createElement('div');
     dpad.id = 'd-pad';
     dpad.innerHTML = `
-        <button id="btn-up" class="d-btn" aria-label="Yukarı">&#9650;</button>
-        <button id="btn-left" class="d-btn" aria-label="Sol">&#9664;</button>
-        <button id="btn-down" class="d-btn" aria-label="Aşağı">&#9660;</button>
-        <button id="btn-right" class="d-btn" aria-label="Sağ">&#9654;</button>
+        <button id="btn-up" class="d-btn" aria-label="Su">&#9650;</button>
+        <button id="btn-left" class="d-btn" aria-label="Sinistra">&#9664;</button>
+        <button id="btn-down" class="d-btn" aria-label="Giù">&#9660;</button>
+        <button id="btn-right" class="d-btn" aria-label="Destra">&#9654;</button>
     `;
     document.body.appendChild(dpad);
 
@@ -264,6 +271,8 @@ function setupMovementControls() {
 
     const moveStep = (bearing) => {
         userPos = offsetMeters(userPos, bearing, METERS_PER_TICK);
+        positions["mainNode"] = userPos;
+        
         if (markerInstances["mainNode"]) {
             markerInstances["mainNode"].setLngLat(userPos);
         }
@@ -385,7 +394,6 @@ function bootstrap() {
         startInteractivePhase();
     }
 
-    // "Bağlanıyor..." ekranı açıldıktan sonra tam olarak 3 saniye (3000 ms) ekranda kalır
     setTimeout(dismissFlow, 3000);
 
     function startInteractivePhase() {
@@ -437,7 +445,7 @@ function bootstrap() {
                 if (isWater) { if (t === "fill") paint(id, "fill-color", PALETTE.water); if (t === "line") paint(id, "line-color", PALETTE.water); return; }
                 if (isGreen) { if (t === "fill") { paint(id, "fill-color", PALETTE.green); paint(id, "fill-opacity", 1); } if (t === "line") paint(id, "line-color", PALETTE.greenDeep); return; }
                 if (sl === "landcover") { if (t === "fill") { paint(id, "fill-color", PALETTE.greenSoft); paint(id, "fill-opacity", 0.9); } return; }
-                if (sl === "landuse") { if (t === "fill") paint(id, "fill-color", PALETTE.land); return; }
+                if (sl === "landuse") { if (t === "fill") paint(id, "fill-color", PAL`.land`); return; }
                 if (sl === "building") { if (t === "fill") { paint(id, "fill-color", PALETTE.building); paint(id, "fill-opacity", 0.85); } return; }
                 if (sl === "transportation") { if (t === "line") paint(id, "line-color", /casing|outline|bridge|tunnel/.test(id) ? PALETTE.roadCase : PALETTE.road); return; }
                 if (t === "symbol") { paint(id, "text-color", PALETTE.text); paint(id, "text-halo-color", PALETTE.textHalo); paint(id, "text-halo-width", 1.4); }
