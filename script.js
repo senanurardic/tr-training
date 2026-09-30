@@ -169,58 +169,31 @@ function injectInteractiveUI() {
             color: #2b6cb0;
         }
 
-        /* Compact Circular D-Pad Controls Container */
+        /* Compact Touchpad Controller Container */
         #d-pad {
             position: absolute;
             bottom: 24px;
             left: 50%;
             transform: translateX(-50%);
-            width: 110px;
-            height: 110px;
-            background: rgba(255, 255, 255, 0.85);
+            width: 96px;
+            height: 96px;
+            background: var(--brand-green);
             border-radius: 50%;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
-            border: 1px solid rgba(0, 0, 0, 0.04);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.9);
             z-index: 2000;
-        }
-        .d-btn {
-            position: absolute;
-            background: var(--brand-green);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-            font-size: 14px;
-            color: #2d3748;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
             touch-action: manipulation;
-            transition: all 0.15s ease;
             -webkit-tap-highlight-color: transparent;
-            width: 36px;
-            height: 36px;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
         }
-        .d-btn:active, .d-btn.active {
+        #d-pad:active, #d-pad.active {
+            transform: translateX(-50%) scale(0.95);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             background: #c8e6cb;
-            transform: scale(0.92);
-            color: #1a202c;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        #btn-up { top: 6px; left: 50%; transform: translateX(-50%); }
-        #btn-up:active, #btn-up.active { transform: translateX(-50%) scale(0.92); }
-
-        #btn-left { left: 6px; top: 50%; transform: translateY(-50%); }
-        #btn-left:active, #btn-left.active { transform: translateY(-50%) scale(0.92); }
-
-        #btn-down { bottom: 6px; left: 50%; transform: translateX(-50%); }
-        #btn-down:active, #btn-down.active { transform: translateX(-50%) scale(0.92); }
-
-        #btn-right { right: 6px; top: 50%; transform: translateY(-50%); }
-        #btn-right:active, #btn-right.active { transform: translateY(-50%) scale(0.92); }
     `;
     document.head.appendChild(style);
 
@@ -240,15 +213,10 @@ function injectInteractiveUI() {
     `;
     document.body.appendChild(modernHeader);
 
-    // Inject Compact Circular Directional Pad
+    // Inject Compact Touchpad Controller (No Arrows)
     const dpad = document.createElement('div');
     dpad.id = 'd-pad';
-    dpad.innerHTML = `
-        <button id="btn-up" class="d-btn" aria-label="Su">&#9650;</button>
-        <button id="btn-left" class="d-btn" aria-label="Sinistra">&#9664;</button>
-        <button id="btn-down" class="d-btn" aria-label="Giù">&#9660;</button>
-        <button id="btn-right" class="d-btn" aria-label="Destra">&#9654;</button>
-    `;
+    dpad.setAttribute('aria-label', "Area di controllo del movimento");
     document.body.appendChild(dpad);
 
     setupMovementControls();
@@ -258,11 +226,7 @@ function setupMovementControls() {
     const TICK_RATE_MS = 30; 
     const METERS_PER_TICK = (WALK_SPEED_MPS / 1000) * TICK_RATE_MS;
 
-    const directions = {
-        'btn-up': (0 + SCENE_ROTATION_DEG) % 360, 
-        'btn-right': (90 + SCENE_ROTATION_DEG) % 360, 
-        'btn-down': (180 + SCENE_ROTATION_DEG) % 360, 
-        'btn-left': (270 + SCENE_ROTATION_DEG) % 360,
+    const keyDirections = {
         'ArrowUp': (0 + SCENE_ROTATION_DEG) % 360, 
         'ArrowRight': (90 + SCENE_ROTATION_DEG) % 360, 
         'ArrowDown': (180 + SCENE_ROTATION_DEG) % 360, 
@@ -281,47 +245,74 @@ function setupMovementControls() {
         }
     };
 
-    const startMove = (bearing, btnId) => {
+    const startMove = (bearing, identifier) => {
         if (moveInterval) clearInterval(moveInterval);
-        currentDirectionBtn = btnId;
+        currentDirectionBtn = identifier;
         
-        const uiBtn = document.getElementById(btnId.replace('Arrow', 'btn-').toLowerCase());
-        if (uiBtn) uiBtn.classList.add('active');
+        const touchpad = document.getElementById('d-pad');
+        if (touchpad) touchpad.classList.add('active');
 
         moveStep(bearing);
         moveInterval = setInterval(() => moveStep(bearing), TICK_RATE_MS);
     };
 
-    const stopMove = (btnId) => {
-        if (currentDirectionBtn !== btnId && btnId !== 'ALL') return;
+    const stopMove = (identifier) => {
+        if (currentDirectionBtn !== identifier && identifier !== 'ALL') return;
         
         if (moveInterval) {
             clearInterval(moveInterval);
             moveInterval = null;
             currentDirectionBtn = null;
         }
-        document.querySelectorAll('.d-btn').forEach(b => b.classList.remove('active'));
+        const touchpad = document.getElementById('d-pad');
+        if (touchpad) touchpad.classList.remove('active');
     };
 
-    ['btn-up', 'btn-right', 'btn-down', 'btn-left'].forEach(id => {
-        const btn = document.getElementById(id);
-        const bearing = directions[id];
-        
-        btn.addEventListener('mousedown', (e) => { e.preventDefault(); startMove(bearing, id); });
-        btn.addEventListener('touchstart', (e) => { e.preventDefault(); startMove(bearing, id); }, { passive: false });
-        
-        btn.addEventListener('mouseup', () => stopMove(id));
-        btn.addEventListener('mouseleave', () => stopMove('ALL'));
-        btn.addEventListener('touchend', (e) => { e.preventDefault(); stopMove(id); });
-    });
+    const handleTouchpadInteraction = (clientX, clientY, identifier) => {
+        const touchpad = document.getElementById('d-pad');
+        if (!touchpad) return;
+        const rect = touchpad.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const dx = clientX - centerX;
+        const dy = clientY - centerY; // Screen coordinates: down is positive Y
+
+        // Calculate angle in degrees relative to upward (0 degrees)
+        let angleDeg = Math.atan2(dx, -dy) * (180 / Math.PI);
+        if (angleDeg < 0) angleDeg += 360;
+
+        const bearing = (angleDeg + SCENE_ROTATION_DEG) % 360;
+        startMove(bearing, identifier);
+    };
+
+    const touchpad = document.getElementById('d-pad');
+    if (touchpad) {
+        touchpad.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            handleTouchpadInteraction(e.clientX, e.clientY, 'mouse');
+        });
+
+        touchpad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleTouchpadInteraction(touch.clientX, touch.clientY, 'touch');
+        }, { passive: false });
+
+        window.addEventListener('mouseup', () => stopMove('mouse'));
+        touchpad.addEventListener('mouseleave', () => stopMove('mouse'));
+        window.addEventListener('touchend', (e) => {
+            if (e.touches.length === 0) stopMove('touch');
+        });
+    }
 
     window.addEventListener('keydown', (e) => {
-        if (directions[e.key] !== undefined && currentDirectionBtn !== e.key) {
-            startMove(directions[e.key], e.key);
+        if (keyDirections[e.key] !== undefined && currentDirectionBtn !== e.key) {
+            startMove(keyDirections[e.key], e.key);
         }
     });
     window.addEventListener('keyup', (e) => {
-        if (directions[e.key] !== undefined) {
+        if (keyDirections[e.key] !== undefined) {
             stopMove(e.key);
         }
     });
@@ -445,7 +436,7 @@ function bootstrap() {
                 if (isWater) { if (t === "fill") paint(id, "fill-color", PALETTE.water); if (t === "line") paint(id, "line-color", PALETTE.water); return; }
                 if (isGreen) { if (t === "fill") { paint(id, "fill-color", PALETTE.green); paint(id, "fill-opacity", 1); } if (t === "line") paint(id, "line-color", PALETTE.greenDeep); return; }
                 if (sl === "landcover") { if (t === "fill") { paint(id, "fill-color", PALETTE.greenSoft); paint(id, "fill-opacity", 0.9); } return; }
-                if (sl === "landuse") { if (t === "fill") paint(id, "fill-color", PAL`.land`); return; }
+                if (sl === "landuse") { if (t === "fill") paint(id, "fill-color", PALETTE.land); return; }
                 if (sl === "building") { if (t === "fill") { paint(id, "fill-color", PALETTE.building); paint(id, "fill-opacity", 0.85); } return; }
                 if (sl === "transportation") { if (t === "line") paint(id, "line-color", /casing|outline|bridge|tunnel/.test(id) ? PALETTE.roadCase : PALETTE.road); return; }
                 if (t === "symbol") { paint(id, "text-color", PALETTE.text); paint(id, "text-halo-color", PALETTE.textHalo); paint(id, "text-halo-width", 1.4); }
