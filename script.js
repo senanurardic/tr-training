@@ -287,7 +287,9 @@ function setupMovementControls() {
         positions["mainNode"] = userPos;
 
         if (markerInstances["mainNode"]) markerInstances["mainNode"].setLngLat(userPos);
-        if (map) map.jumpTo({ center: userPos });
+        
+        // HARİTAYI SABİTLEMEK İÇİN BU SATIR DEVRE DIŞI BIRAKILDI
+        // if (map) map.jumpTo({ center: userPos });
 
         rafId = requestAnimationFrame(frame);
     };
