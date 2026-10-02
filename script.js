@@ -15,7 +15,7 @@ const MAP_ZOOM = 18.0;
 // Rotation angle for map and movement vectors (to align with roads)
 const SCENE_ROTATION_DEG = 55;
 
-const WALK_SPEED_MPS = 1.2; 
+const WALK_SPEED_MPS = 1.8; 
 const EARTH_RADIUS_M = 6378137;
 
 function offsetMeters(origin, bearingDeg, meters) {
@@ -78,7 +78,6 @@ function initMarkers() {
 /* ==========================================================================
  * INTERACTIVE MOVEMENT LOGIC & UI INJECTION
  * ========================================================================== */
-let moveInterval = null;
 let currentDirectionBtn = null;
 
 function injectInteractiveUI() {
@@ -86,6 +85,11 @@ function injectInteractiveUI() {
     style.innerHTML = `
         :root {
             --brand-green: rgba(220, 242, 224, 0.95); 
+        }
+
+        /* Marker must never animate its own position: map updates it every frame */
+        .marker-cluster, .agent-node {
+            transition: none !important;
         }
 
         /* Google Maps Style Blue Pulse Dot Animation & Layout */
@@ -105,6 +109,7 @@ function injectInteractiveUI() {
             background: rgba(66, 133, 244, 0.4);
             border-radius: 50%;
             animation: google-pulse 2s infinite ease-out;
+            will-change: transform, opacity;
         }
 
         .google-maps-core {
@@ -255,47 +260,57 @@ function injectInteractiveUI() {
 }
 
 function setupMovementControls() {
-    const TICK_RATE_MS = 30; 
-    const METERS_PER_TICK = (WALK_SPEED_MPS / 1000) * TICK_RATE_MS;
-
     const keyDirections = {
-        'ArrowUp': (0 + SCENE_ROTATION_DEG) % 360, 
-        'ArrowRight': (90 + SCENE_ROTATION_DEG) % 360, 
-        'ArrowDown': (180 + SCENE_ROTATION_DEG) % 360, 
+        'ArrowUp': (0 + SCENE_ROTATION_DEG) % 360,
+        'ArrowRight': (90 + SCENE_ROTATION_DEG) % 360,
+        'ArrowDown': (180 + SCENE_ROTATION_DEG) % 360,
         'ArrowLeft': (270 + SCENE_ROTATION_DEG) % 360
     };
 
-    const moveStep = (bearing) => {
-        userPos = offsetMeters(userPos, bearing, METERS_PER_TICK);
+    let activeBearing = null;
+    let rafId = null;
+    let lastTs = null;
+
+    // Marker and camera are updated together, once per screen frame
+    const frame = (ts) => {
+        if (activeBearing === null) {
+            rafId = null;
+            lastTs = null;
+            return;
+        }
+        if (lastTs === null) lastTs = ts;
+        // Clamp dt so a lag spike or background tab never causes a jump
+        const dt = Math.min((ts - lastTs) / 1000, 0.05);
+        lastTs = ts;
+
+        userPos = offsetMeters(userPos, activeBearing, WALK_SPEED_MPS * dt);
         positions["mainNode"] = userPos;
-        
-        if (markerInstances["mainNode"]) {
-            markerInstances["mainNode"].setLngLat(userPos);
-        }
-        if (map) {
-            map.easeTo({ center: userPos, duration: TICK_RATE_MS, easing: (t) => t });
-        }
+
+        if (markerInstances["mainNode"]) markerInstances["mainNode"].setLngLat(userPos);
+        if (map) map.jumpTo({ center: userPos });
+
+        rafId = requestAnimationFrame(frame);
     };
 
     const startMove = (bearing, identifier) => {
-        if (moveInterval) clearInterval(moveInterval);
         currentDirectionBtn = identifier;
-        
+        activeBearing = bearing;
+
         const touchpad = document.getElementById('d-pad');
         if (touchpad) touchpad.classList.add('active');
 
-        moveStep(bearing);
-        moveInterval = setInterval(() => moveStep(bearing), TICK_RATE_MS);
+        if (rafId === null) {
+            lastTs = null;
+            rafId = requestAnimationFrame(frame);
+        }
     };
 
     const stopMove = (identifier) => {
         if (currentDirectionBtn !== identifier && identifier !== 'ALL') return;
-        
-        if (moveInterval) {
-            clearInterval(moveInterval);
-            moveInterval = null;
-            currentDirectionBtn = null;
-        }
+
+        activeBearing = null;
+        currentDirectionBtn = null;
+
         const touchpad = document.getElementById('d-pad');
         if (touchpad) touchpad.classList.remove('active');
     };
@@ -304,17 +319,13 @@ function setupMovementControls() {
         const touchpad = document.getElementById('d-pad');
         if (!touchpad) return;
         const rect = touchpad.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-
-        const dx = clientX - centerX;
-        const dy = clientY - centerY; 
+        const dx = clientX - (rect.left + rect.width / 2);
+        const dy = clientY - (rect.top + rect.height / 2);
 
         let angleDeg = Math.atan2(dx, -dy) * (180 / Math.PI);
         if (angleDeg < 0) angleDeg += 360;
 
-        const bearing = (angleDeg + SCENE_ROTATION_DEG) % 360;
-        startMove(bearing, identifier);
+        startMove((angleDeg + SCENE_ROTATION_DEG) % 360, identifier);
     };
 
     const touchpad = document.getElementById('d-pad');
@@ -343,9 +354,7 @@ function setupMovementControls() {
         }
     });
     window.addEventListener('keyup', (e) => {
-        if (keyDirections[e.key] !== undefined) {
-            stopMove(e.key);
-        }
+        if (keyDirections[e.key] !== undefined) stopMove(e.key);
     });
 }
 
